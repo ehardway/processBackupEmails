@@ -8,12 +8,20 @@ class email_files:
 
 class parse_shadow_backup_emails:
 
+    subjects = []
+
     def __init__(self,list_of_email_files):
         list_of_email_files = list_of_email_files
 
     def get_subjects(self):
-        for emails in list_of_email_files:
-            print(emails)
+        for email in list_of_email_files:
+            with open(email) as f:
+                read_data = f.read()
+                print(read_data)
+                f.closed
+
+        def get_match_and_next_line(self,pattern):
+            self.pattern = pattern
 
 list_of_email_files = email_files.get_list_of_files("/tmp/save/email_*")
 
