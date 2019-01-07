@@ -43,7 +43,7 @@ class parse_shadow_backup_emails:
     def create_dictionary(self, split_subject):
         if len(split_subject) == 7:
             subject_dictionary = {
-                'server': self.get_server_name(split_subject[0].strip()),
+                'server': split_subject[0].strip().strip('Subject: '),
                 'client': split_subject[1].strip(),
                 'company': split_subject[2].strip(),
                 'backup_code': self.get_backup_code(split_subject[5].strip()),
@@ -51,10 +51,8 @@ class parse_shadow_backup_emails:
             }
             return subject_dictionary
 
-    def get_server_name(self,server):
-        return server.strip('Subject: ')
-
-    def get_backup_code(self,raw_code):
+    @staticmethod
+    def get_backup_code(raw_code):
         backup_code = raw_code.split()
         return backup_code[1].strip("'")
 
