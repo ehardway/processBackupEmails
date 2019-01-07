@@ -1,6 +1,6 @@
 import glob
 import re
-
+from datetime import datetime
 
 class email_files:
 
@@ -47,7 +47,7 @@ class parse_shadow_backup_emails:
                 'client': split_subject[1].strip(),
                 'company': split_subject[2].strip(),
                 'backup_code': self.get_backup_code(split_subject[5].strip()),
-                'email_date': split_subject[-1].strip()
+                'email_date': self.get_email_time(split_subject[-1].strip())
             }
             return subject_dictionary
 
@@ -56,9 +56,18 @@ class parse_shadow_backup_emails:
         backup_code = raw_code.split()
         return backup_code[1].strip("'")
 
+    @staticmethod
+    def get_email_time(raw_email_time):
+        email_time_list = raw_email_time.split()
+        email_time = email_time_list[-4] + ' ' + email_time_list[-3] + ' ' + email_time_list[-2] + ' ' + email_time_list[-1]
+        datetime_object = datetime.strptime(email_time, '%b %d %H:%M:%S %Y')
+        return datetime_object
+
 
 parse_emails = parse_shadow_backup_emails("/tmp/save/*")
 
 subjects = parse_emails.get_subjects()
+
 split_subjects = parse_emails.split_subject(subjects)
+
 print(split_subjects)
