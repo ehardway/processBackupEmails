@@ -4,16 +4,20 @@ import json
 import glob
 import os
 
+
 class email_files:
     @staticmethod
     def get_list_of_files(pattern):
         return glob.glob(pattern)
 
-class parse_shadow_backup_emails:
+
+class parseShadowBackupEmails:
     subjects = []
     split_subjects = []
-    unique_subjects = {}
-    dictionary_file = 'subjects.json'
+    active_email_dictionary = {}
+    dictionary_file = 'email_dictionary.json'
+    master_email_dictionary = {}
+    change_count = 0
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
@@ -24,8 +28,8 @@ class parse_shadow_backup_emails:
                 file_data = f.readlines()
                 self.get_match_and_next_line("^Subject:", file_data)
                 f.closed
+            os.remove(email)
 #            os.rename(email, "processed/" + email.replace("/tmp/save/", ''))
-#            os.remove(email)
         return self.subjects
 
     def get_match_and_next_line(self, pattern, file_data):
@@ -48,28 +52,51 @@ class parse_shadow_backup_emails:
                 'client': str(split_subject[1].strip()),
                 'company': str(split_subject[2].strip()),
                 'backup_code': str(self.get_backup_code(split_subject[5].strip())),
-                'email_date': str(self.get_email_time(split_subject[-1].strip()))
+                'email_time': str(self.get_email_time(split_subject[-1].strip()))
             }
             return subject_dictionary
 
-    def build_unique_dictionary(self):
+    def build_unique_active_dictionary(self):
         split_subjects = list(filter(None.__ne__, self.split_subjects))
         for subject in split_subjects:
             key = subject['server'] + '-' + subject['client'] + '-' + subject['company']
-            if key not in self.unique_subjects:
-                self.unique_subjects[key] = subject
-            elif key in self.unique_subjects:
-                print('duplicate ' + key + ' ' + subject['email_date'])
-#        print(self.unique_subjects)
+            if key not in self.active_email_dictionary:
+                self.active_email_dictionary[key] = subject
+            elif key in self.active_email_dictionary:
+                datetime_object_in_dict = datetime.strptime(self.active_email_dictionary[key]['email_time'], '%b %d %H:%M:%S %Y')
+                datetime_object = datetime.strptime(subject['email_time'], '%b %d %H:%M:%S %Y')
+                if datetime_object > datetime_object_in_dict:
+                    self.active_email_dictionary[key] = subject
+        self.initialize_dictionary()
 
+    def compare_master_and_active_dictionaries(self):
+        for key, email_data in self.active_email_dictionary.items():
+            if key not in self.master_email_dictionary:
+                self.master_email_dictionary[key] = email_data
+                self.change_count += 1
+            elif key in self.master_email_dictionary:
+                datetime_object_in_master_dict = datetime.strptime(self.master_email_dictionary[key]['email_time'], '%b %d %H:%M:%S %Y')
+                datetime_object = datetime.strptime(email_data['email_time'], '%b %d %H:%M:%S %Y')
+                if datetime_object > datetime_object_in_master_dict:
+                    self.master_email_dictionary[key] = email_data
+                    self.change_count += 1
+        if self.change_count > 0:
+            print("Something Change Updating Dictionary on disk")
+            self.save_json(self.master_email_dictionary, self.dictionary_file)
 
-    def save_dictionary(self):
+    def load_master_dictionary(self):
+        if os.path.isfile(self.dictionary_file):
+            self.master_email_dictionary = self.load_json(self.dictionary_file)
+
+    def initialize_dictionary(self):
         if not os.path.isfile(self.dictionary_file):
-            self.save_json(self.dictionary_file)
+            print("Initializing Dictionary on Disk")
+            self.save_json(self.active_email_dictionary, self.dictionary_file)
 
-    def save_json(self, file_name):
+    @staticmethod
+    def save_json(data, file_name):
         with open(file_name, 'w') as fp:
-            json.dump(self.split_subjects, fp)
+            json.dump(data, fp)
 
     @staticmethod
     def load_json(file_name):
@@ -84,6 +111,7 @@ class parse_shadow_backup_emails:
     @staticmethod
     def get_email_time(raw_email_time):
         email_time_list = raw_email_time.split()
-        email_time = email_time_list[-4] + ' ' + email_time_list[-3] + ' ' + email_time_list[-2] + ' ' + email_time_list[-1]
+        email_time = email_time_list[-4] + ' ' + email_time_list[-3] + ' ' + email_time_list[-2] + ' ' + \
+                     email_time_list[-1]
         #        datetime_object = datetime.strptime(email_time, '%b %d %H:%M:%S %Y')
         return email_time
