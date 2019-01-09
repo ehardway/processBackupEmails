@@ -69,10 +69,13 @@ class parseShadowBackupEmails:
                 'client': str(split_subject[1].strip()),
                 'company': str(split_subject[2].strip()),
                 'backup_code': str(self.get_backup_code(split_subject[5].strip())),
-                'email_time': str(self.get_email_time(split_subject[-1].strip())),
+                'email_time': self.set_datetime_to_timezone(str(self.get_email_time(split_subject[-1].strip()))),
                 'threshold': self.default_threshold
             }
             return subject_dictionary
+
+    def set_datetime_to_timezone(self, email_time):
+        return str(datetime.strptime(email_time, '%b %d %H:%M:%S %Y').astimezone(self.tz))
 
     def build_unique_active_dictionary(self):
         split_subjects = list(filter(None.__ne__, self.split_subjects))
