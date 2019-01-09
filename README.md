@@ -8,14 +8,12 @@ Requirements
 - Debian Linux Server 
 - Postfix 
 - Fetchmail
-- MySQL 
-- PHP
 - Apache 
+- Python
 
 ## Theory Of Operation
 1. ShadowProtect sends out emails to a dedicated email account.
 2. Fetchmail downloads the emails and forwards it locally to postfix.
 3. Postfix process the email using a postfix filter/hook which copies the email into a text file stored in a directory.
-4. A PHP script run via cron parses these backup report email's into a MySQL database.
-5. Another PHP script run via cron determines the status of each backup job and generates a web based dashboard. 
+4. Python script process emails and generates a web page.
 
