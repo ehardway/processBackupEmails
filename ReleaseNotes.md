@@ -6,6 +6,7 @@
 ### What's New In 2.0 Vesion
 - Project has been converted from PHP 7 to Python 3.7 
 - MySQL has been replaced by a json file stored on disk
+- Removed ini file
 
 ## 3.0 Version Coming Soon: 
 ### New Features
