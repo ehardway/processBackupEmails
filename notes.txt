@@ -1,2 +1,0 @@
-How to generate ini file:
-select concat('threshold[] = \"',client, " | ",server," | ",company,' | 48\"') from backup_log order by company,client;
