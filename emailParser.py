@@ -13,5 +13,7 @@ parse_emails.load_master_dictionary()
 
 parse_emails.compare_master_and_active_dictionaries()
 
+parse_emails.generate_html_table()
+
 
 

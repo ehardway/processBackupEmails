@@ -18,18 +18,26 @@ class parseShadowBackupEmails:
     dictionary_file = 'email_dictionary.json'
     master_email_dictionary = {}
     change_count = 0
+    backup_code_1120 = []
+    backup_code_1121 = []
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
 
+    def check_for_shadow_email(self):
+        for email in self.list_of_email_files:
+            with open(email) as f:
+                if 'ShadowProtectSvc' not in f.read():
+                    self.list_of_email_files.remove(email)
+
     def get_subjects(self):
+        self.check_for_shadow_email()
         for email in self.list_of_email_files:
             with open(email) as f:
                 file_data = f.readlines()
                 self.get_match_and_next_line("^Subject:", file_data)
                 f.closed
-            os.remove(email)
-#            os.rename(email, "processed/" + email.replace("/tmp/save/", ''))
+                os.remove(email)
         return self.subjects
 
     def get_match_and_next_line(self, pattern, file_data):
@@ -59,11 +67,12 @@ class parseShadowBackupEmails:
     def build_unique_active_dictionary(self):
         split_subjects = list(filter(None.__ne__, self.split_subjects))
         for subject in split_subjects:
-            key = subject['server'] + '-' + subject['client'] + '-' + subject['company']
+            key = subject['company'] + subject['server'] +  subject['client']
             if key not in self.active_email_dictionary:
                 self.active_email_dictionary[key] = subject
             elif key in self.active_email_dictionary:
-                datetime_object_in_dict = datetime.strptime(self.active_email_dictionary[key]['email_time'], '%b %d %H:%M:%S %Y')
+                datetime_object_in_dict = datetime.strptime(self.active_email_dictionary[key]['email_time'],
+                                                            '%b %d %H:%M:%S %Y')
                 datetime_object = datetime.strptime(subject['email_time'], '%b %d %H:%M:%S %Y')
                 if datetime_object > datetime_object_in_dict:
                     self.active_email_dictionary[key] = subject
@@ -75,7 +84,8 @@ class parseShadowBackupEmails:
                 self.master_email_dictionary[key] = email_data
                 self.change_count += 1
             elif key in self.master_email_dictionary:
-                datetime_object_in_master_dict = datetime.strptime(self.master_email_dictionary[key]['email_time'], '%b %d %H:%M:%S %Y')
+                datetime_object_in_master_dict = datetime.strptime(self.master_email_dictionary[key]['email_time'],
+                                                                   '%b %d %H:%M:%S %Y')
                 datetime_object = datetime.strptime(email_data['email_time'], '%b %d %H:%M:%S %Y')
                 if datetime_object > datetime_object_in_master_dict:
                     self.master_email_dictionary[key] = email_data
@@ -83,6 +93,23 @@ class parseShadowBackupEmails:
         if self.change_count > 0:
             print("Something Change Updating Dictionary on disk")
             self.save_json(self.master_email_dictionary, self.dictionary_file)
+    #        print(len(self.master_email_dictionary.keys()))
+    #        print(len(self.active_email_dictionary.keys()))
+
+    def generate_html_table(self):
+        self.sort_master_dictionary()
+        # Need to come up with unknown status
+        # also need to add a threshold somewhere
+
+    def sort_master_dictionary(self):
+        self.backup_code_1120 = []
+        self.backup_code_1121 = []
+        for key, data in sorted(self.master_email_dictionary.items()):
+            if data['backup_code'] == "1120":
+                self.backup_code_1120.append(data)
+            elif data['backup_code'] == "1121":
+                self.backup_code_1121.append(data)
+
 
     def load_master_dictionary(self):
         if os.path.isfile(self.dictionary_file):
@@ -113,5 +140,4 @@ class parseShadowBackupEmails:
         email_time_list = raw_email_time.split()
         email_time = email_time_list[-4] + ' ' + email_time_list[-3] + ' ' + email_time_list[-2] + ' ' + \
                      email_time_list[-1]
-        #        datetime_object = datetime.strptime(email_time, '%b %d %H:%M:%S %Y')
         return email_time
