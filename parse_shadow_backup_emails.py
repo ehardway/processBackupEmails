@@ -1,8 +1,9 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import glob
 import os
+from pytz import timezone
 
 
 class email_files:
@@ -20,6 +21,10 @@ class parseShadowBackupEmails:
     change_count = 0
     backup_code_1120 = []
     backup_code_1121 = []
+    backup_code_unknown = []
+    default_threshold = 48
+    row_id = 0
+    tz = timezone('EST')
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
@@ -60,14 +65,15 @@ class parseShadowBackupEmails:
                 'client': str(split_subject[1].strip()),
                 'company': str(split_subject[2].strip()),
                 'backup_code': str(self.get_backup_code(split_subject[5].strip())),
-                'email_time': str(self.get_email_time(split_subject[-1].strip()))
+                'email_time': str(self.get_email_time(split_subject[-1].strip())),
+                'threshold': self.default_threshold
             }
             return subject_dictionary
 
     def build_unique_active_dictionary(self):
         split_subjects = list(filter(None.__ne__, self.split_subjects))
         for subject in split_subjects:
-            key = subject['company'] + subject['server'] +  subject['client']
+            key = subject['company'] + subject['server'] + subject['client']
             if key not in self.active_email_dictionary:
                 self.active_email_dictionary[key] = subject
             elif key in self.active_email_dictionary:
@@ -88,28 +94,102 @@ class parseShadowBackupEmails:
                                                                    '%b %d %H:%M:%S %Y')
                 datetime_object = datetime.strptime(email_data['email_time'], '%b %d %H:%M:%S %Y')
                 if datetime_object > datetime_object_in_master_dict:
+                    if self.master_email_dictionary[key]['threshold'] != email_data['threshold']:
+                        email_data['threshold'] = self.master_email_dictionary[key]['threshold']
                     self.master_email_dictionary[key] = email_data
                     self.change_count += 1
         if self.change_count > 0:
             print("Something Change Updating Dictionary on disk")
             self.save_json(self.master_email_dictionary, self.dictionary_file)
-    #        print(len(self.master_email_dictionary.keys()))
-    #        print(len(self.active_email_dictionary.keys()))
 
     def generate_html_table(self):
         self.sort_master_dictionary()
-        # Need to come up with unknown status
-        # also need to add a threshold somewhere
+        table = ''
+        table += self.build_html_table_header()
+        table += self.build_html_table_data('unknown', self.backup_code_unknown)
+        table += self.build_html_table_data('critical', self.backup_code_1121)
+        table += self.build_html_table_data('ok', self.backup_code_1120)
+        table += self.build_html_table_footer()
+        print(table)
+        with open("output.html", "w") as text_file:
+            text_file.write(table)
+
+    def build_dashboard(self):
+        table = ''
+        table += "<table border=1>\n"
+        table += "<tr>\n"
+        table += "<th> OK </th>\n"
+        table += "<th> UNKNOWN </th>\n"
+        table += "<th> CRITICAL </th>\n"
+        table += "<th> Total </th>\n"
+        table += "</tr>\n"
+        table += "<tr>\n"
+        table += "<td> " + str(len(self.backup_code_1120)) + "</td>\n"
+        table += "<td bgcolor=orange> " + str(len(self.backup_code_unknown)) + "</td>\n"
+        table += "<td bgcolor=E64A34> " + str(len(self.backup_code_1121)) + "</td>\n"
+        table += "<td> " + str(
+            len(self.backup_code_1121) + len(self.backup_code_1120) + len(self.backup_code_unknown)) + "</td>\n"
+        table += "</tr></table>\n"
+        return table
+
+    def build_html_table_data(self, status, list_of_code):
+        table_data = ''
+        for data in list_of_code:
+            self.row_id += 1
+            table_data += self.build_table_row_data(self.row_id, status, data)
+        return table_data
+
+    @staticmethod
+    def get_row_color(status):
+        colors = {'unknown': 'orange', 'ok': 'white', 'critical': 'E64A34'}
+        return colors[status]
+
+    def build_table_row_data(self, row_id, status, row):
+        table_row = ''
+        table_row += "<tr bgcolor=" + self.get_row_color(status) + ">"
+        table_row += "<td>" + str(row_id) + "</td>"
+        table_row += "<td>" + status.upper() + "</td>"
+        table_row += "<td>" + row['company'] + "</td>"
+        table_row += "<td>" + row['client'] + "</td>"
+        table_row += "<td>" + row['email_time'] + "</td>"
+        table_row += "<td>" + str(row['threshold']) + " Hours</td>"
+        table_row += "</tr>\n"
+        return table_row
+
+    def build_html_table_header(self):
+        current_time = datetime.now(self.tz)
+        fmt = '%Y-%m-%d %H:%M:%S %Z%z'
+        header = ['id', 'status', 'company', 'client', 'last email', 'threshold']
+        table_head = ''
+        table_head += "<html>\n"
+        table_head += "<head>\n"
+        table_head += "<title> Shadow Protect Backup Status </title>\n";
+        table_head += "</head>\n"
+        table_head += "Page generated at " + current_time.strftime(fmt) + "<br>"
+        table_head += self.build_dashboard()
+        table_head += "<table border=1>\n"
+        table_head += "<tr>"
+        for column in header:
+            table_head += '<th>' + column.upper() + '</th>'
+        table_head += "</tr>\n"
+        return table_head
+
+    def build_html_table_footer(self):
+        footer = ''
+        footer += "</table>"
+        footer += "</html>"
+        return footer
 
     def sort_master_dictionary(self):
-        self.backup_code_1120 = []
-        self.backup_code_1121 = []
         for key, data in sorted(self.master_email_dictionary.items()):
-            if data['backup_code'] == "1120":
+            alert_time = datetime.now(self.tz) - timedelta(hours=data['threshold'])
+            email_time = datetime.strptime(data['email_time'], '%b %d %H:%M:%S %Y').astimezone(self.tz)
+            if email_time < alert_time:
+                self.backup_code_unknown.append(data)
+            elif data['backup_code'] == "1120":
                 self.backup_code_1120.append(data)
             elif data['backup_code'] == "1121":
                 self.backup_code_1121.append(data)
-
 
     def load_master_dictionary(self):
         if os.path.isfile(self.dictionary_file):
@@ -117,7 +197,7 @@ class parseShadowBackupEmails:
 
     def initialize_dictionary(self):
         if not os.path.isfile(self.dictionary_file):
-            print("Initializing Dictionary on Disk")
+            print("Initialized Dictionary on Disk")
             self.save_json(self.active_email_dictionary, self.dictionary_file)
 
     @staticmethod
