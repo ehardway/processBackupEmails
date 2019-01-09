@@ -17,6 +17,7 @@ class parseShadowBackupEmails:
     split_subjects = []
     active_email_dictionary = {}
     dictionary_file = 'email_dictionary.json'
+    web_page_file = 'sp.html'
     master_email_dictionary = {}
     change_count = 0
     backup_code_1120 = []
@@ -111,7 +112,7 @@ class parseShadowBackupEmails:
         table += self.build_html_table_data('ok', self.backup_code_1120)
         table += self.build_html_table_footer()
         print(table)
-        with open("output.html", "w") as text_file:
+        with open(self.web_page_file, "w") as text_file:
             text_file.write(table)
 
     def build_dashboard(self):
@@ -208,8 +209,11 @@ class parseShadowBackupEmails:
 
     @staticmethod
     def load_json(file_name):
-        with open(file_name, 'r') as fp:
-            return json.load(fp)
+        try:
+            with open(file_name, 'r') as fp:
+                return json.load(fp)
+        except:
+            print("something went wrong")
 
     @staticmethod
     def get_backup_code(raw_code):
