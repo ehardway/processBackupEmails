@@ -1,3 +1,4 @@
+import socket
 
 from parse_shadow_backup_emails import *
 
@@ -15,7 +16,8 @@ parse_emails.compare_master_and_active_dictionaries()
 
 parse_emails.generate_html_table()
 
-parse_emails.rename_web_page()
+if socket.gethostname() == 'localhost':
+    parse_emails.rename_web_page()
 
 
 
