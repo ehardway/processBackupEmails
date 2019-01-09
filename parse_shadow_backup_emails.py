@@ -47,7 +47,7 @@ class parseShadowBackupEmails:
         return self.subjects
 
     def rename_web_page(self):
-        os.rename(self.web_page_file,"/var/www/html/" + self.web_page_file)
+        os.rename(self.web_page_file,"/var/www/html/reports/" + self.web_page_file)
 
     def get_match_and_next_line(self, pattern, file_data):
         for line_number, line in enumerate(file_data):

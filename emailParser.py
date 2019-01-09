@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 import socket
 
 from parse_shadow_backup_emails import *
