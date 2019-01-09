@@ -124,10 +124,10 @@ class parseShadowBackupEmails:
         table += "<th> Total </th>\n"
         table += "</tr>\n"
         table += "<tr>\n"
-        table += "<td> " + str(len(self.backup_code_1120)) + "</td>\n"
-        table += "<td bgcolor=orange> " + str(len(self.backup_code_unknown)) + "</td>\n"
-        table += "<td bgcolor=E64A34> " + str(len(self.backup_code_1121)) + "</td>\n"
-        table += "<td> " + str(
+        table += "<td align=center> " + str(len(self.backup_code_1120)) + "</td>\n"
+        table += "<td bgcolor=orange align=center> " + str(len(self.backup_code_unknown)) + "</td>\n"
+        table += "<td bgcolor=E64A34 align=center> " + str(len(self.backup_code_1121)) + "</td>\n"
+        table += "<td align=center> " + str(
             len(self.backup_code_1121) + len(self.backup_code_1120) + len(self.backup_code_unknown)) + "</td>\n"
         table += "</tr></table>\n"
         return table
@@ -147,19 +147,20 @@ class parseShadowBackupEmails:
     def build_table_row_data(self, row_id, status, row):
         table_row = ''
         table_row += "<tr bgcolor=" + self.get_row_color(status) + ">"
-        table_row += "<td>" + str(row_id) + "</td>"
-        table_row += "<td>" + status.upper() + "</td>"
-        table_row += "<td>" + row['company'] + "</td>"
-        table_row += "<td>" + row['client'] + "</td>"
-        table_row += "<td>" + row['email_time'] + "</td>"
-        table_row += "<td>" + str(row['threshold']) + " Hours</td>"
+        table_row += "<td align=center>" + str(row_id) + "</td>"
+        table_row += "<td align=center>" + status.upper() + "</td>"
+        table_row += "<td align=center>" + row['company'] + "</td>"
+        table_row += "<td align=center>" + row['client'] + "</td>"
+        table_row += "<td align=center>" + row['email_time'] + "</td>"
+        table_row += "<td align=center>" + row['backup_code'] + "</td>"
+        table_row += "<td align=center>" + str(row['threshold']) + " Hours</td>"
         table_row += "</tr>\n"
         return table_row
 
     def build_html_table_header(self):
         current_time = datetime.now(self.tz)
-        fmt = '%Y-%m-%d %H:%M:%S %Z%z'
-        header = ['id', 'status', 'company', 'client', 'last email', 'threshold']
+        fmt = '%Y-%m-%d %H:%M:%S %Z'
+        header = ['id', 'status', 'company', 'client', 'last email', 'backup_code', 'threshold']
         table_head = ''
         table_head += "<html>\n"
         table_head += "<head>\n"
