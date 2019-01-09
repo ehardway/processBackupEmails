@@ -46,6 +46,9 @@ class parseShadowBackupEmails:
                 os.remove(email)
         return self.subjects
 
+    def rename_web_page(self):
+        os.rename(self.web_page_file,"/var/www/html/" + self.web_page_file)
+
     def get_match_and_next_line(self, pattern, file_data):
         for line_number, line in enumerate(file_data):
             if re.search("^From", line) and line_number == 1:
@@ -111,7 +114,6 @@ class parseShadowBackupEmails:
         table += self.build_html_table_data('critical', self.backup_code_1121)
         table += self.build_html_table_data('ok', self.backup_code_1120)
         table += self.build_html_table_footer()
-        print(table)
         with open(self.web_page_file, "w") as text_file:
             text_file.write(table)
 
