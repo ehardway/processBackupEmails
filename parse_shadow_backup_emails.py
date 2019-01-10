@@ -88,8 +88,8 @@ class parseShadowBackupEmails:
                 self.active_email_dictionary[key] = subject
             elif key in self.active_email_dictionary:
                 datetime_object_in_dict = datetime.strptime(self.active_email_dictionary[key]['email_time'],
-                                                            '%b %d %H:%M:%S %Y')
-                datetime_object = datetime.strptime(subject['email_time'], '%b %d %H:%M:%S %Y')
+                                                            '%Y-%m-%d %H:%M:%S')
+                datetime_object = datetime.strptime(subject['email_time'], '%Y-%m-%d %H:%M:%S')
                 if datetime_object > datetime_object_in_dict:
                     self.active_email_dictionary[key] = subject
         self.initialize_dictionary()
