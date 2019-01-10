@@ -43,7 +43,7 @@ class parseShadowBackupEmails:
                 file_data = f.readlines()
                 self.get_match_and_next_line("^Subject:", file_data)
                 f.closed
-                os.remove(email)
+#                os.remove(email)
         return self.subjects
 
     def rename_web_page(self):
