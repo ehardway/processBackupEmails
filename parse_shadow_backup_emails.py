@@ -193,12 +193,11 @@ class parseShadowBackupEmails:
     def sort_master_dictionary(self):
         for key, data in sorted(self.master_email_dictionary.items()):
             now = pendulum.now('US/Eastern')
-            now.subtract(hours=data['threshold'])
-            now.to_datetime_string()
-            alert_time = datetime.strptime(now.to_datetime_string(), '%Y-%m-%d %H:%M:%S')
+            threshold_time = now.subtract(hours=data['threshold'])
+            alert_time_formatted = threshold_time.strftime('%Y-%m-%d %H:%M:%S')
+            alert_time = datetime.strptime(alert_time_formatted, '%Y-%m-%d %H:%M:%S')
             email_time = datetime.strptime(data['email_time'], '%Y-%m-%d %H:%M:%S')
             if email_time < alert_time:
-                print(str(email_time) + ' ' + str(alert_time))
                 self.backup_code_unknown.append(data)
             elif data['backup_code'] == "1120":
                 self.backup_code_1120.append(data)
