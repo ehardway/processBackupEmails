@@ -43,6 +43,7 @@ class processEmails
   $emailContents = [];
   foreach ($this->emailFileNames as $fileName) {
     $emailContents[$fileName] =  file_get_contents($fileName);
+    $this->copyEmailFiles($fileName);
     $this->deleteEmailFiles($fileName);
   }
   $this->emailContents = $emailContents;
@@ -52,6 +53,14 @@ class processEmails
   private function deleteEmailFiles($file)
   {
     system("rm -vf $file");
+    return true;
+  }
+
+  private function copyEmailFiles($file)
+  {
+    $justFileName = str_replace("{$this->emailDirectory}/",'',$file);
+    system("mkdir -p /tmp/save");
+    system("cp -vf $file /tmp/save/{$justFileName}");
     return true;
   }
 
