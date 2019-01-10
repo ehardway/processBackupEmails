@@ -175,7 +175,7 @@ class parseShadowBackupEmails:
         table_head += "<head>\n"
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
-        table_head += "Page generated at " + str(current_time) + "<br>"
+        table_head += "Page generated at " + current_time.to_datetime_string() + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
