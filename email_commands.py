@@ -60,7 +60,7 @@ class EmailCommands:
                 del dictionary[key]
         elif command.upper() == 'ADD':
             dictionary[key] = {'server': client, 'client': client, 'company': company,
-                               'backup_code': 1120, 'email_time': default_time,
+                               'backup_code': '1120', 'email_time': default_time,
                                'threshold': default_threshold}
         return dictionary
 
