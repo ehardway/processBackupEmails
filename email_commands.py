@@ -36,7 +36,7 @@ class EmailCommands:
                 for line in file_data:
                     if re.search("^COMMAND", line):
                         commands.append(line)
-        #        os.remove(email)
+            os.remove(email)
         return commands
 
     def process_commands(self, dictionary, default_threshold, default_date_format, dictionary_file):
@@ -52,7 +52,7 @@ class EmailCommands:
     @staticmethod
     def update_dictionary(command, company, client, dictionary, default_threshold, default_date_format):
         now = pendulum.now('US/Eastern')
-        threshold_time = now.subtract(hours=default_threshold)
+        threshold_time = now.subtract(hours=default_threshold + 1)
         default_time = threshold_time.strftime(default_date_format)
         key = company + client + client
         if command.upper() == 'REMOVE':
