@@ -26,6 +26,7 @@ class parseShadowBackupEmails:
     default_threshold = 48
     row_id = 0
     date_format = '%m-%d-%Y %H:%M:%S'
+    max_parse_time = 'none'
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
@@ -64,13 +65,15 @@ class parseShadowBackupEmails:
 
     def create_dictionary(self, split_subject):
         if len(split_subject) == 7:
+            parse_time = pendulum.now('US/Eastern')
             subject_dictionary = {
                 'server': str(split_subject[0].strip().replace('Subject: ', '')),
                 'client': str(split_subject[1].strip()),
                 'company': str(split_subject[2].strip()),
                 'backup_code': str(self.get_backup_code(split_subject[5].strip())),
                 'email_time': self.convert_utc_to_local(str(self.get_email_time(split_subject[-1].strip()))),
-                'threshold': self.default_threshold
+                'threshold': self.default_threshold,
+                'parse_time': parse_time.strftime(self.date_format)
             }
             return subject_dictionary
 
@@ -114,7 +117,7 @@ class parseShadowBackupEmails:
             self.save_json(self.master_email_dictionary, self.dictionary_file)
 
     def generate_html_table(self):
-        self.sort_master_dictionary()
+        self.sort_master_dictionary_for_web_page()
         table = ''
         table += self.build_html_table_header()
         table += self.build_html_table_data('unknown', self.backup_code_unknown)
@@ -175,7 +178,8 @@ class parseShadowBackupEmails:
         table_head += "<head>\n"
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
-        table_head += "Page generated at " + current_time.to_datetime_string() + "<br>"
+        table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
+        table_head += "Last email received at " + self.max_parse_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -190,8 +194,9 @@ class parseShadowBackupEmails:
         footer += "</html>"
         return footer
 
-    def sort_master_dictionary(self):
+    def sort_master_dictionary_for_web_page(self):
         for key, data in sorted(self.master_email_dictionary.items()):
+            self.get_max_parse_time(data['parse_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
             alert_time_formatted = threshold_time.strftime(self.date_format)
@@ -203,6 +208,12 @@ class parseShadowBackupEmails:
                 self.backup_code_1120.append(data)
             elif data['backup_code'] == "1121":
                 self.backup_code_1121.append(data)
+
+    def get_max_parse_time(self, parse_time):
+        if self.max_parse_time == 'none':
+            self.max_parse_time = datetime.strptime(parse_time, self.date_format)
+        elif datetime.strptime(parse_time, self.date_format) > self.max_parse_time:
+            self.max_parse_time = datetime.strptime(parse_time, self.date_format)
 
     def load_master_dictionary(self):
         if os.path.isfile(self.dictionary_file):
