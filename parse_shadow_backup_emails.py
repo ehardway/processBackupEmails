@@ -16,7 +16,7 @@ class parseShadowBackupEmails:
     subjects = []
     split_subjects = []
     active_email_dictionary = {}
-    dictionary_file = 'email_dictionary.json'
+    dictionary_file = '/tmp/email_dictionary.json'
     web_page_file = 'sp.html'
     master_email_dictionary = {}
     change_count = 0
