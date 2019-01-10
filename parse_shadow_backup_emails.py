@@ -25,6 +25,7 @@ class parseShadowBackupEmails:
     backup_code_unknown = []
     default_threshold = 48
     row_id = 0
+    date_format = '%m-%d-%Y %H:%M:%S'
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
@@ -77,7 +78,7 @@ class parseShadowBackupEmails:
         dt = pendulum.from_format(email_time, 'MMM DD HH:mm:ss YYYY', tz='UTC')
         tz = pendulum.timezone('US/Eastern')
         in_est = tz.convert(dt)
-        return in_est.strftime('%Y-%m-%d %H:%M:%S')
+        return in_est.strftime(self.date_format)
 
 
     def build_unique_active_dictionary(self):
@@ -88,8 +89,8 @@ class parseShadowBackupEmails:
                 self.active_email_dictionary[key] = subject
             elif key in self.active_email_dictionary:
                 datetime_object_in_dict = datetime.strptime(self.active_email_dictionary[key]['email_time'],
-                                                            '%Y-%m-%d %H:%M:%S')
-                datetime_object = datetime.strptime(subject['email_time'], '%Y-%m-%d %H:%M:%S')
+                                                            self.date_format)
+                datetime_object = datetime.strptime(subject['email_time'], self.date_format)
                 if datetime_object > datetime_object_in_dict:
                     self.active_email_dictionary[key] = subject
         self.initialize_dictionary()
@@ -101,8 +102,8 @@ class parseShadowBackupEmails:
                 self.change_count += 1
             elif key in self.master_email_dictionary:
                 datetime_object_in_master_dict = datetime.strptime(self.master_email_dictionary[key]['email_time'],
-                                                                   '%Y-%m-%d %H:%M:%S')
-                datetime_object = datetime.strptime(email_data['email_time'], '%Y-%m-%d %H:%M:%S')
+                                                                   self.date_format)
+                datetime_object = datetime.strptime(email_data['email_time'], self.date_format)
                 if datetime_object > datetime_object_in_master_dict:
                     if self.master_email_dictionary[key]['threshold'] != email_data['threshold']:
                         email_data['threshold'] = self.master_email_dictionary[key]['threshold']
@@ -168,14 +169,13 @@ class parseShadowBackupEmails:
 
     def build_html_table_header(self):
         current_time = pendulum.now('US/Eastern')
-        fmt = '%Y-%m-%d %H:%M:%S %Z'
         header = ['id', 'status', 'company', 'client', 'last email', 'backup_code', 'threshold']
         table_head = ''
         table_head += "<html>\n"
         table_head += "<head>\n"
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
-        table_head += "Page generated at " + current_time.strftime(fmt) + "<br>"
+        table_head += "Page generated at " + str(current_time) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -194,9 +194,9 @@ class parseShadowBackupEmails:
         for key, data in sorted(self.master_email_dictionary.items()):
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
-            alert_time_formatted = threshold_time.strftime('%Y-%m-%d %H:%M:%S')
-            alert_time = datetime.strptime(alert_time_formatted, '%Y-%m-%d %H:%M:%S')
-            email_time = datetime.strptime(data['email_time'], '%Y-%m-%d %H:%M:%S')
+            alert_time_formatted = threshold_time.strftime(self.date_format)
+            alert_time = datetime.strptime(alert_time_formatted, self.date_format)
+            email_time = datetime.strptime(data['email_time'], self.date_format)
             if email_time < alert_time:
                 self.backup_code_unknown.append(data)
             elif data['backup_code'] == "1120":
