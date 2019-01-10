@@ -198,6 +198,7 @@ class parseShadowBackupEmails:
             alert_time = datetime.strptime(now.to_datetime_string(), '%Y-%m-%d %H:%M:%S')
             email_time = datetime.strptime(data['email_time'], '%Y-%m-%d %H:%M:%S')
             if email_time < alert_time:
+                print(str(email_time) + ' ' + str(alert_time))
                 self.backup_code_unknown.append(data)
             elif data['backup_code'] == "1120":
                 self.backup_code_1120.append(data)
