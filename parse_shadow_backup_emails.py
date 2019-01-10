@@ -72,8 +72,7 @@ class parseShadowBackupEmails:
                 'company': str(split_subject[2].strip()),
                 'backup_code': str(self.get_backup_code(split_subject[5].strip())),
                 'email_time': self.convert_utc_to_local(str(self.get_email_time(split_subject[-1].strip()))),
-                'threshold': self.default_threshold,
-                'parse_time': parse_time.strftime(self.date_format)
+                'threshold': self.default_threshold
             }
             return subject_dictionary
 
@@ -196,8 +195,7 @@ class parseShadowBackupEmails:
 
     def sort_master_dictionary_for_web_page(self):
         for key, data in sorted(self.master_email_dictionary.items()):
-            if 'parse_time' in data:
-                self.get_max_parse_time(data['parse_time'])
+            self.get_max_parse_time(data['email_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
             alert_time_formatted = threshold_time.strftime(self.date_format)
