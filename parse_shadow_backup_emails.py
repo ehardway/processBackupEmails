@@ -27,6 +27,7 @@ class parseShadowBackupEmails:
     row_id = 0
     date_format = '%m-%d-%Y %H:%M:%S'
     max_parse_time = 'none'
+    min_parse_time = 'none'
 
     def __init__(self, directory):
         self.list_of_email_files = email_files.get_list_of_files(directory)
@@ -178,7 +179,7 @@ class parseShadowBackupEmails:
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
         table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
-        table_head += "Last email received at " + self.max_parse_time.strftime(self.date_format) + "<br>"
+        table_head += "Emails processed between " + self.min_parse_time.strftime(self.date_format) + ' and ' + self.max_parse_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -195,7 +196,7 @@ class parseShadowBackupEmails:
 
     def sort_master_dictionary_for_web_page(self):
         for key, data in sorted(self.master_email_dictionary.items()):
-            self.get_max_parse_time(data['email_time'])
+            self.get_parse_time(data['email_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
             alert_time_formatted = threshold_time.strftime(self.date_format)
@@ -208,11 +209,15 @@ class parseShadowBackupEmails:
             elif data['backup_code'] == "1121":
                 self.backup_code_1121.append(data)
 
-    def get_max_parse_time(self, parse_time):
+    def get_parse_time(self, parse_time):
         if self.max_parse_time == 'none':
             self.max_parse_time = datetime.strptime(parse_time, self.date_format)
         elif datetime.strptime(parse_time, self.date_format) > self.max_parse_time:
             self.max_parse_time = datetime.strptime(parse_time, self.date_format)
+        if self.min_parse_time == 'none':
+            self.min_parse_time = datetime.strptime(parse_time, self.date_format)
+        elif datetime.strptime(parse_time, self.date_format) < self.min_parse_time:
+            self.min_parse_time = datetime.strptime(parse_time, self.date_format)
 
     def load_master_dictionary(self):
         if os.path.isfile(self.dictionary_file):
