@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import glob
 import os
@@ -33,14 +33,17 @@ class parseShadowBackupEmails:
         self.list_of_email_files = email_files.get_list_of_files(directory)
 
     def check_for_shadow_email(self):
+        list_of_shadow_emails = []
         for email in self.list_of_email_files:
             with open(email) as f:
-                if 'ShadowProtectSvc' not in f.read():
-                    self.list_of_email_files.remove(email)
+                if 'ShadowProtectSvc' in f.read():
+                    list_of_shadow_emails.append(email)
+            f.closed
+        return list_of_shadow_emails
 
     def get_subjects(self):
-        self.check_for_shadow_email()
-        for email in self.list_of_email_files:
+        list_of_email_files = self.check_for_shadow_email()
+        for email in list_of_email_files:
             with open(email) as f:
                 file_data = f.readlines()
                 self.get_match_and_next_line("^Subject:", file_data)
@@ -66,7 +69,6 @@ class parseShadowBackupEmails:
 
     def create_dictionary(self, split_subject):
         if len(split_subject) == 7:
-            parse_time = pendulum.now('US/Eastern')
             subject_dictionary = {
                 'server': str(split_subject[0].strip().replace('Subject: ', '')),
                 'client': str(split_subject[1].strip()),
@@ -82,7 +84,6 @@ class parseShadowBackupEmails:
         tz = pendulum.timezone('US/Eastern')
         in_est = tz.convert(dt)
         return in_est.strftime(self.date_format)
-
 
     def build_unique_active_dictionary(self):
         split_subjects = list(filter(None.__ne__, self.split_subjects))
