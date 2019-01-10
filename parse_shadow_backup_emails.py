@@ -38,7 +38,6 @@ class parseShadowBackupEmails:
             with open(email) as f:
                 if 'ShadowProtectSvc' in f.read():
                     list_of_shadow_emails.append(email)
-            f.closed
         return list_of_shadow_emails
 
     def get_subjects(self):
@@ -47,7 +46,6 @@ class parseShadowBackupEmails:
             with open(email) as f:
                 file_data = f.readlines()
                 self.get_match_and_next_line("^Subject:", file_data)
-                f.closed
                 os.remove(email)
         return self.subjects
 
