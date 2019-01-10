@@ -196,7 +196,8 @@ class parseShadowBackupEmails:
 
     def sort_master_dictionary_for_web_page(self):
         for key, data in sorted(self.master_email_dictionary.items()):
-            self.get_max_parse_time(data['parse_time'])
+            if data['parse_time'] is not None:
+                self.get_max_parse_time(data['parse_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
             alert_time_formatted = threshold_time.strftime(self.date_format)
