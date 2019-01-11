@@ -139,6 +139,9 @@ class parseShadowBackupEmails:
         table += "<th> UNKNOWN </th>\n"
         table += "<th> CRITICAL </th>\n"
         table += "<th> Total </th>\n"
+        table += "<th> Companies </th>\n"
+        table += "<th> First Email </th>\n"
+        table += "<th> Last Email </th>\n"
         table += "</tr>\n"
         table += "<tr>\n"
         table += "<td align=center> " + str(len(self.backup_code_1120)) + "</td>\n"
@@ -146,6 +149,9 @@ class parseShadowBackupEmails:
         table += "<td bgcolor=E64A34 align=center> " + str(len(self.backup_code_1121)) + "</td>\n"
         table += "<td align=center> " + str(
             len(self.backup_code_1121) + len(self.backup_code_1120) + len(self.backup_code_unknown)) + "</td>\n"
+        table += "<td align=center> " + str(self.company_count) + "</td>\n"
+        table += "<td align=center> " + self.min_parse_time.strftime(self.date_format) + "</td>\n"
+        table += "<td align=center> " + self.max_parse_time.strftime(self.date_format) + "</td>\n"
         table += "</tr></table>\n"
         return table
 
@@ -183,8 +189,6 @@ class parseShadowBackupEmails:
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
         table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
-        table_head += "Emails processed between " + self.min_parse_time.strftime(
-            self.date_format) + ' and ' + self.max_parse_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -200,7 +204,9 @@ class parseShadowBackupEmails:
         return footer
 
     def sort_master_dictionary_for_web_page(self):
+        company_list = []
         for key, data in sorted(self.master_email_dictionary.items()):
+            company_list.append(data['company'])
             self.get_parse_time(data['email_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
@@ -213,6 +219,7 @@ class parseShadowBackupEmails:
                 self.backup_code_1120.append(data)
             elif data['backup_code'] == "1121":
                 self.backup_code_1121.append(data)
+        self.company_count = len(set(company_list))
 
     def get_parse_time(self, parse_time):
         if self.max_parse_time == 'none':
