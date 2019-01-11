@@ -4,9 +4,11 @@ import socket
 from parse_shadow_backup_emails import *
 from email_commands import *
 
-parse_emails = parseShadowBackupEmails("/tmp/email_messages/*")
+email_directory = '/tmp/email_messages/*'
 
-email_commands = EmailCommands("/tmp/email_messages/*")
+parse_emails = parseShadowBackupEmails(email_directory)
+
+email_commands = EmailCommands(email_directory)
 
 email_commands.process_commands(parse_emails.master_email_dictionary, parse_emails.default_threshold,
                                 parse_emails.date_format, parse_emails.dictionary_file)

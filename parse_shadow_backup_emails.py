@@ -14,7 +14,6 @@ class email_files:
 
 class parseShadowBackupEmails:
     active_email_dictionary = {}
-    dictionary_file = '/tmp/email_dictionary.json'
     web_page_file = 'sp.html'
     master_email_dictionary = {}
     change_count = 0
@@ -28,6 +27,7 @@ class parseShadowBackupEmails:
     min_parse_time = 'none'
 
     def __init__(self, directory):
+        self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
         list_of_email_files = self.check_for_shadow_email(email_files.get_list_of_files(directory))
         subjects = self.get_subjects(list_of_email_files)
         split_subjects = self.split_subject(subjects)
