@@ -31,8 +31,6 @@ class ParseShadowBackupEmails:
         self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
         list_of_email_files = self.check_for_shadow_email(EmailFiles.get_list_of_files(directory))
         subjects = self.get_subjects(list_of_email_files)
-        print(subjects)
-        exit(0)
         split_subjects = self.split_subject(subjects)
         self.build_unique_active_dictionary(split_subjects)
         self.load_master_dictionary()
