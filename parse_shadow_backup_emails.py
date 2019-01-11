@@ -6,17 +6,14 @@ import os
 import pendulum
 
 
-class email_files:
+class EmailFiles:
     @staticmethod
     def get_list_of_files(pattern):
         return glob.glob(pattern)
 
 
-class parseShadowBackupEmails:
-    subjects = []
-    split_subjects = []
+class ParseShadowBackupEmails:
     active_email_dictionary = {}
-    dictionary_file = '/home/bakemail/email_dictionary.json'
     web_page_file = 'sp.html'
     master_email_dictionary = {}
     change_count = 0
@@ -28,42 +25,54 @@ class parseShadowBackupEmails:
     date_format = '%m-%d-%Y %H:%M:%S'
     max_parse_time = 'none'
     min_parse_time = 'none'
+    company_count = 0
 
     def __init__(self, directory):
-        self.list_of_email_files = email_files.get_list_of_files(directory)
+        self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
+        list_of_email_files = self.check_for_shadow_email(EmailFiles.get_list_of_files(directory))
+        subjects = self.get_subjects(list_of_email_files)
+        split_subjects = self.split_subject(subjects)
+        self.build_unique_active_dictionary(split_subjects)
+        self.load_master_dictionary()
+        self.compare_master_and_active_dictionaries()
 
-    def check_for_shadow_email(self):
+    @staticmethod
+    def check_for_shadow_email(list_of_files):
         list_of_shadow_emails = []
-        for email in self.list_of_email_files:
+        for email in list_of_files:
             with open(email) as f:
                 if 'ShadowProtectSvc' in f.read():
                     list_of_shadow_emails.append(email)
         return list_of_shadow_emails
 
-    def get_subjects(self):
-        list_of_email_files = self.check_for_shadow_email()
+    def get_subjects(self, list_of_email_files):
+        subjects = []
         for email in list_of_email_files:
             with open(email) as f:
                 file_data = f.readlines()
-                self.get_match_and_next_line("^Subject:", file_data)
+                subjects.append(self.get_match_and_next_line("^Subject:", file_data))
                 os.remove(email)
-        return self.subjects
+        return subjects
 
     def rename_web_page(self):
-        os.rename(self.web_page_file,"/var/www/html/reports/" + self.web_page_file)
+        os.rename(self.web_page_file, "/var/www/html/reports/" + self.web_page_file)
 
-    def get_match_and_next_line(self, pattern, file_data):
+    @staticmethod
+    def get_match_and_next_line(pattern, file_data):
+        from_date = ''
         for line_number, line in enumerate(file_data):
             if re.search("^From", line) and line_number == 1:
                 from_date = "| " + line
             if re.search(pattern, line):
                 subject = line.rstrip() + " " + file_data[line_number + 1].rstrip() + " " + from_date.rstrip()
-                self.subjects.append(subject)
+                return subject
 
     def split_subject(self, subjects):
+        split_subjects = []
         for subject in subjects:
             split_subject = subject.split('|')
-            self.split_subjects.append(self.create_dictionary(split_subject))
+            split_subjects.append(self.create_dictionary(split_subject))
+        return split_subjects
 
     def create_dictionary(self, split_subject):
         if len(split_subject) == 7:
@@ -83,8 +92,8 @@ class parseShadowBackupEmails:
         in_est = tz.convert(dt)
         return in_est.strftime(self.date_format)
 
-    def build_unique_active_dictionary(self):
-        split_subjects = list(filter(None.__ne__, self.split_subjects))
+    def build_unique_active_dictionary(self, split_subjects):
+        split_subjects = list(filter(None.__ne__, split_subjects))
         for subject in split_subjects:
             key = subject['company'] + subject['server'] + subject['client']
             if key not in self.active_email_dictionary:
@@ -127,13 +136,18 @@ class parseShadowBackupEmails:
             text_file.write(table)
 
     def build_dashboard(self):
+        current_time = pendulum.now('US/Eastern')
         table = ''
         table += "<table border=1>\n"
         table += "<tr>\n"
         table += "<th> OK </th>\n"
         table += "<th> UNKNOWN </th>\n"
         table += "<th> CRITICAL </th>\n"
-        table += "<th> Total </th>\n"
+        table += "<th> Clients </th>\n"
+        table += "<th> Companies </th>\n"
+        table += "<th> First Email </th>\n"
+        table += "<th> Last Email </th>\n"
+        table += "<th> Page Generated </th>\n"
         table += "</tr>\n"
         table += "<tr>\n"
         table += "<td align=center> " + str(len(self.backup_code_1120)) + "</td>\n"
@@ -141,6 +155,10 @@ class parseShadowBackupEmails:
         table += "<td bgcolor=E64A34 align=center> " + str(len(self.backup_code_1121)) + "</td>\n"
         table += "<td align=center> " + str(
             len(self.backup_code_1121) + len(self.backup_code_1120) + len(self.backup_code_unknown)) + "</td>\n"
+        table += "<td align=center> " + str(self.company_count) + "</td>\n"
+        table += "<td align=center> " + self.min_parse_time.strftime(self.date_format) + "</td>\n"
+        table += "<td align=center> " + self.max_parse_time.strftime(self.date_format) + "</td>\n"
+        table += "<td align=center> " + current_time.strftime(self.date_format) + "</td>\n"
         table += "</tr></table>\n"
         return table
 
@@ -170,15 +188,12 @@ class parseShadowBackupEmails:
         return table_row
 
     def build_html_table_header(self):
-        current_time = pendulum.now('US/Eastern')
         header = ['id', 'status', 'company', 'client', 'last email', 'backup_code', 'threshold']
         table_head = ''
         table_head += "<html>\n"
         table_head += "<head>\n"
-        table_head += "<title> Shadow Protect Backup Status </title>\n";
+        table_head += "<title> Shadow Protect Backup Status </title>\n"
         table_head += "</head>\n"
-        table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
-        table_head += "Emails processed between " + self.min_parse_time.strftime(self.date_format) + ' and ' + self.max_parse_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -187,14 +202,17 @@ class parseShadowBackupEmails:
         table_head += "</tr>\n"
         return table_head
 
-    def build_html_table_footer(self):
+    @staticmethod
+    def build_html_table_footer():
         footer = ''
         footer += "</table>"
         footer += "</html>"
         return footer
 
     def sort_master_dictionary_for_web_page(self):
+        company_list = []
         for key, data in sorted(self.master_email_dictionary.items()):
+            company_list.append(data['company'])
             self.get_parse_time(data['email_time'])
             now = pendulum.now('US/Eastern')
             threshold_time = now.subtract(hours=data['threshold'])
@@ -207,6 +225,7 @@ class parseShadowBackupEmails:
                 self.backup_code_1120.append(data)
             elif data['backup_code'] == "1121":
                 self.backup_code_1121.append(data)
+        self.company_count = len(set(company_list))
 
     def get_parse_time(self, parse_time):
         if self.max_parse_time == 'none':
@@ -225,20 +244,26 @@ class parseShadowBackupEmails:
     def initialize_dictionary(self):
         if not os.path.isfile(self.dictionary_file):
             print("Initialized Dictionary on Disk")
-            self.save_json(self.active_email_dictionary, self.dictionary_file)
+            try:
+                self.save_json(self.active_email_dictionary, self.dictionary_file)
+            except (FileNotFoundError, FileExistsError, IOError) as err:
+                print(err)
 
     @staticmethod
     def save_json(data, file_name):
-        with open(file_name, 'w') as fp:
-            json.dump(data, fp)
+        try:
+            with open(file_name, 'w') as fp:
+                json.dump(data, fp)
+        except (FileNotFoundError, FileExistsError, IOError) as err:
+            print(err)
 
     @staticmethod
     def load_json(file_name):
         try:
             with open(file_name, 'r') as fp:
                 return json.load(fp)
-        except:
-            print("something went wrong")
+        except (FileExistsError, IOError) as err:
+            print(err)
 
     @staticmethod
     def get_backup_code(raw_code):
