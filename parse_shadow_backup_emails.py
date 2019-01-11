@@ -31,6 +31,8 @@ class ParseShadowBackupEmails:
         self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
         list_of_email_files = self.check_for_shadow_email(EmailFiles.get_list_of_files(directory))
         subjects = self.get_subjects(list_of_email_files)
+        print(subjects)
+        exit(0)
         split_subjects = self.split_subject(subjects)
         self.build_unique_active_dictionary(split_subjects)
         self.load_master_dictionary()
@@ -59,9 +61,11 @@ class ParseShadowBackupEmails:
 
     @staticmethod
     def get_match_and_next_line(pattern, file_data):
+        from_date = ''
         for line_number, line in enumerate(file_data):
-            if re.search(pattern, line) and line_number == 1:
+            if re.search("^From", line) and line_number == 1:
                 from_date = "| " + line
+            if re.search(pattern, line):
                 subject = line.rstrip() + " " + file_data[line_number + 1].rstrip() + " " + from_date.rstrip()
                 return subject
 
