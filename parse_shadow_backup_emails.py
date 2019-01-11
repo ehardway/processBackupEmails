@@ -136,6 +136,7 @@ class ParseShadowBackupEmails:
             text_file.write(table)
 
     def build_dashboard(self):
+        current_time = pendulum.now('US/Eastern')
         table = ''
         table += "<table border=1>\n"
         table += "<tr>\n"
@@ -146,6 +147,7 @@ class ParseShadowBackupEmails:
         table += "<th> Companies </th>\n"
         table += "<th> First Email </th>\n"
         table += "<th> Last Email </th>\n"
+        table += "<th> Page Generated </th>\n"
         table += "</tr>\n"
         table += "<tr>\n"
         table += "<td align=center> " + str(len(self.backup_code_1120)) + "</td>\n"
@@ -156,6 +158,7 @@ class ParseShadowBackupEmails:
         table += "<td align=center> " + str(self.company_count) + "</td>\n"
         table += "<td align=center> " + self.min_parse_time.strftime(self.date_format) + "</td>\n"
         table += "<td align=center> " + self.max_parse_time.strftime(self.date_format) + "</td>\n"
+        table += "<td align=center> " + current_time.strftime(self.date_format) + "</td>\n"
         table += "</tr></table>\n"
         return table
 
@@ -185,14 +188,12 @@ class ParseShadowBackupEmails:
         return table_row
 
     def build_html_table_header(self):
-        current_time = pendulum.now('US/Eastern')
         header = ['id', 'status', 'company', 'client', 'last email', 'backup_code', 'threshold']
         table_head = ''
         table_head += "<html>\n"
         table_head += "<head>\n"
         table_head += "<title> Shadow Protect Backup Status </title>\n"
         table_head += "</head>\n"
-        table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
