@@ -6,16 +6,6 @@ from email_commands import *
 
 parse_emails = parseShadowBackupEmails("/tmp/email_messages/*")
 
-subjects = parse_emails.get_subjects()
-
-parse_emails.split_subject(subjects)
-
-parse_emails.build_unique_active_dictionary()
-
-parse_emails.load_master_dictionary()
-
-parse_emails.compare_master_and_active_dictionaries()
-
 email_commands = EmailCommands("/tmp/email_messages/*")
 
 email_commands.process_commands(parse_emails.master_email_dictionary, parse_emails.default_threshold,

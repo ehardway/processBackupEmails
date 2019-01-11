@@ -13,10 +13,8 @@ class email_files:
 
 
 class parseShadowBackupEmails:
-    subjects = []
-    split_subjects = []
     active_email_dictionary = {}
-    dictionary_file = '/home/bakemail/email_dictionary.json'
+    dictionary_file = '/tmp/email_dictionary.json'
     web_page_file = 'sp.html'
     master_email_dictionary = {}
     change_count = 0
@@ -30,27 +28,32 @@ class parseShadowBackupEmails:
     min_parse_time = 'none'
 
     def __init__(self, directory):
-        self.list_of_email_files = email_files.get_list_of_files(directory)
+        list_of_email_files = self.check_for_shadow_email(email_files.get_list_of_files(directory))
+        subjects = self.get_subjects(list_of_email_files)
+        split_subjects = self.split_subject(subjects)
+        self.build_unique_active_dictionary(split_subjects)
+        self.load_master_dictionary()
+        self.compare_master_and_active_dictionaries()
 
-    def check_for_shadow_email(self):
+    def check_for_shadow_email(self, list_of_files):
         list_of_shadow_emails = []
-        for email in self.list_of_email_files:
+        for email in list_of_files:
             with open(email) as f:
                 if 'ShadowProtectSvc' in f.read():
                     list_of_shadow_emails.append(email)
         return list_of_shadow_emails
 
-    def get_subjects(self):
-        list_of_email_files = self.check_for_shadow_email()
+    def get_subjects(self, list_of_email_files):
+        subjects = []
         for email in list_of_email_files:
             with open(email) as f:
                 file_data = f.readlines()
-                self.get_match_and_next_line("^Subject:", file_data)
+                subjects.append(self.get_match_and_next_line("^Subject:", file_data))
                 os.remove(email)
-        return self.subjects
+        return subjects
 
     def rename_web_page(self):
-        os.rename(self.web_page_file,"/var/www/html/reports/" + self.web_page_file)
+        os.rename(self.web_page_file, "/var/www/html/reports/" + self.web_page_file)
 
     def get_match_and_next_line(self, pattern, file_data):
         for line_number, line in enumerate(file_data):
@@ -58,12 +61,14 @@ class parseShadowBackupEmails:
                 from_date = "| " + line
             if re.search(pattern, line):
                 subject = line.rstrip() + " " + file_data[line_number + 1].rstrip() + " " + from_date.rstrip()
-                self.subjects.append(subject)
+                return subject
 
     def split_subject(self, subjects):
+        split_subjects = []
         for subject in subjects:
             split_subject = subject.split('|')
-            self.split_subjects.append(self.create_dictionary(split_subject))
+            split_subjects.append(self.create_dictionary(split_subject))
+        return split_subjects
 
     def create_dictionary(self, split_subject):
         if len(split_subject) == 7:
@@ -83,8 +88,8 @@ class parseShadowBackupEmails:
         in_est = tz.convert(dt)
         return in_est.strftime(self.date_format)
 
-    def build_unique_active_dictionary(self):
-        split_subjects = list(filter(None.__ne__, self.split_subjects))
+    def build_unique_active_dictionary(self, split_subjects):
+        split_subjects = list(filter(None.__ne__, split_subjects))
         for subject in split_subjects:
             key = subject['company'] + subject['server'] + subject['client']
             if key not in self.active_email_dictionary:
@@ -178,7 +183,8 @@ class parseShadowBackupEmails:
         table_head += "<title> Shadow Protect Backup Status </title>\n";
         table_head += "</head>\n"
         table_head += "Page generated at " + current_time.strftime(self.date_format) + "<br>"
-        table_head += "Emails processed between " + self.min_parse_time.strftime(self.date_format) + ' and ' + self.max_parse_time.strftime(self.date_format) + "<br>"
+        table_head += "Emails processed between " + self.min_parse_time.strftime(
+            self.date_format) + ' and ' + self.max_parse_time.strftime(self.date_format) + "<br>"
         table_head += self.build_dashboard()
         table_head += "<table border=1>\n"
         table_head += "<tr>"
@@ -225,20 +231,26 @@ class parseShadowBackupEmails:
     def initialize_dictionary(self):
         if not os.path.isfile(self.dictionary_file):
             print("Initialized Dictionary on Disk")
-            self.save_json(self.active_email_dictionary, self.dictionary_file)
+            try:
+                self.save_json(self.active_email_dictionary, self.dictionary_file)
+            except (FileNotFoundError, FileExistsError, IOError)  as err:
+                print(err)
 
     @staticmethod
     def save_json(data, file_name):
-        with open(file_name, 'w') as fp:
-            json.dump(data, fp)
+        try:
+            with open(file_name, 'w') as fp:
+                json.dump(data, fp)
+        except (FileNotFoundError, FileExistsError, IOError)  as err:
+            print(err)
 
     @staticmethod
     def load_json(file_name):
         try:
             with open(file_name, 'r') as fp:
                 return json.load(fp)
-        except:
-            print("something went wrong")
+        except (FileExistsError, IOError)  as err:
+            print(err)
 
     @staticmethod
     def get_backup_code(raw_code):
