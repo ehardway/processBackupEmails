@@ -5,7 +5,7 @@ import os
 import pendulum
 
 
-class email_files:
+class EmailFiles:
     @staticmethod
     def get_list_of_files(pattern):
         return glob.glob(pattern)
@@ -15,11 +15,12 @@ class EmailCommands:
     commands = []
 
     def __init__(self, directory):
-        list_of_email_files = email_files.get_list_of_files(directory)
+        list_of_email_files = EmailFiles.get_list_of_files(directory)
         list_of_command_emails = self.check_for_command_email(list_of_email_files)
         self.commands = self.get_commands(list_of_command_emails)
 
-    def check_for_command_email(self, list_of_email_files):
+    @staticmethod
+    def check_for_command_email(list_of_email_files):
         command_emails = []
         for email in list_of_email_files:
             with open(email) as f:
@@ -27,7 +28,8 @@ class EmailCommands:
                     command_emails.append(email)
         return command_emails
 
-    def get_commands(self, list_of_command_emails):
+    @staticmethod
+    def get_commands(list_of_command_emails):
         commands = []
         for email in list_of_command_emails:
             with open(email) as f:

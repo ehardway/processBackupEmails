@@ -6,7 +6,7 @@ from email_commands import *
 
 email_directory = '/tmp/email_messages/*'
 
-parse_emails = parseShadowBackupEmails(email_directory)
+parse_emails = ParseShadowBackupEmails(email_directory)
 
 email_commands = EmailCommands(email_directory)
 
