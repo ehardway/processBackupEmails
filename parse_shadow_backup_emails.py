@@ -138,7 +138,7 @@ class parseShadowBackupEmails:
         table += "<th> OK </th>\n"
         table += "<th> UNKNOWN </th>\n"
         table += "<th> CRITICAL </th>\n"
-        table += "<th> Total </th>\n"
+        table += "<th> Clients </th>\n"
         table += "<th> Companies </th>\n"
         table += "<th> First Email </th>\n"
         table += "<th> Last Email </th>\n"
