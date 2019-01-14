@@ -26,6 +26,7 @@ class ParseShadowBackupEmails:
     max_parse_time = 'none'
     min_parse_time = 'none'
     company_count = 0
+    table_width = "80%"
 
     def __init__(self, directory):
         self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
@@ -138,7 +139,7 @@ class ParseShadowBackupEmails:
     def build_dashboard(self):
         current_time = pendulum.now('US/Eastern')
         table = ''
-        table += "<table border=1>\n"
+        table += "<table border=1 width=" + self.table_width + ">\n"
         table += "<tr>\n"
         table += "<th> OK </th>\n"
         table += "<th> UNKNOWN </th>\n"
@@ -195,7 +196,7 @@ class ParseShadowBackupEmails:
         table_head += "<title> Shadow Protect Backup Status </title>\n"
         table_head += "</head>\n"
         table_head += self.build_dashboard()
-        table_head += "<table border=1>\n"
+        table_head += "<table border=1 width=" + self.table_width + ">\n"
         table_head += "<tr>"
         for column in header:
             table_head += '<th>' + column.upper() + '</th>'
