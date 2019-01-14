@@ -26,7 +26,7 @@ class ParseShadowBackupEmails:
     max_parse_time = 'none'
     min_parse_time = 'none'
     company_count = 0
-    table_width = "80%"
+    table_width = "100%"
 
     def __init__(self, directory):
         self.dictionary_file = os.getenv("HOME") + '/email_dictionary.json'
