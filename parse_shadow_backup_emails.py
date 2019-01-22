@@ -20,7 +20,7 @@ class ParseShadowBackupEmails:
     backup_code_1120 = []
     backup_code_1121 = []
     backup_code_unknown = []
-    default_threshold = 48
+    default_threshold = 72 
     row_id = 0
     date_format = '%m-%d-%Y %H:%M:%S'
     max_parse_time = 'none'
