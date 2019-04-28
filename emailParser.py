@@ -4,7 +4,7 @@ import socket
 from parse_shadow_backup_emails import *
 from email_commands import *
 
-email_directory = '/tmp/email_messages/*'
+email_directory = '/opt/email_messages/*'
 
 parse_emails = ParseShadowBackupEmails(email_directory)
 
