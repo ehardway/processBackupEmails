@@ -24,7 +24,7 @@ Requirements
 Subject: COMMAND
 
 Body:
-COMMAND | ADD | Company Name | Backup Client Name
+COMMAND | ADD | Company Name | Server Name | Backup Client Name
 ```
 
 2. To REMOVE: 
@@ -32,5 +32,5 @@ COMMAND | ADD | Company Name | Backup Client Name
 Subject: COMMAND
 
 Body:
-COMMAND | REMOVE | Company Name | Backup Client Name
+COMMAND | REMOVE | Company Name | Server Name | Backup Client Name
 ```
