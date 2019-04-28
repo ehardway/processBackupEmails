@@ -181,6 +181,7 @@ class ParseShadowBackupEmails:
         table_row += "<td align=center>" + str(row_id) + "</td>"
         table_row += "<td align=center>" + status.upper() + "</td>"
         table_row += "<td align=center>" + row['company'] + "</td>"
+        table_row += "<td align=center>" + row['server'] + "</td>"
         table_row += "<td align=center>" + row['client'] + "</td>"
         table_row += "<td align=center>" + row['email_time'] + "</td>"
         table_row += "<td align=center>" + row['backup_code'] + "</td>"
@@ -189,7 +190,7 @@ class ParseShadowBackupEmails:
         return table_row
 
     def build_html_table_header(self):
-        header = ['id', 'status', 'company', 'client', 'last email', 'backup_code', 'threshold']
+        header = ['id', 'status', 'company', 'server', 'client', 'last email', 'backup_code', 'threshold']
         table_head = ''
         table_head += "<html>\n"
         table_head += "<head>\n"
