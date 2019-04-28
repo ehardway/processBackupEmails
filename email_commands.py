@@ -37,25 +37,28 @@ class EmailCommands:
                 for line in file_data:
                     if re.search("^COMMAND", line):
                         commands.append(line)
-            os.remove(email)
+                    os.remove(email)
         return commands
 
     def process_commands(self, dictionary, default_threshold, default_date_format, dictionary_file):
         for command in self.commands:
             c = command.split('|')
-            c_command = c[1].strip()
-            c_company = c[2].strip()
-            c_client = c[3].strip()
-            dictionary = self.update_dictionary(c_command, c_company, c_client, dictionary, default_threshold,
-                                                default_date_format)
+            if len(c) >= 5:
+                c_command = c[1].strip()
+                c_company = c[2].strip()
+                c_server = c[3].strip()
+                c_client = c[4].strip()
+                dictionary = self.update_dictionary(c_command, c_company, c_client, c_server, dictionary,
+                                                    default_threshold,
+                                                    default_date_format)
         self.save_json(dictionary, dictionary_file)
 
     @staticmethod
-    def update_dictionary(command, company, client, dictionary, default_threshold, default_date_format):
+    def update_dictionary(command, company, client, server, dictionary, default_threshold, default_date_format):
         now = pendulum.now('US/Eastern')
         threshold_time = now.subtract(hours=default_threshold + 1)
         default_time = threshold_time.strftime(default_date_format)
-        key = company + client + client
+        key = company + server + client
         if command.upper() == 'REMOVE':
             if key in dictionary.keys():
                 del dictionary[key]
@@ -70,3 +73,4 @@ class EmailCommands:
     def save_json(data, file_name):
         with open(file_name, 'w') as fp:
             json.dump(data, fp)
+
