@@ -36,7 +36,8 @@ class EmailCommands:
                 file_data = f.readlines()
                 for line in file_data:
                     if re.search("^COMMAND", line):
-                        commands.append(line + next(line))
+                        lines = str(line) + str(next(line))
+                        commands.append(lines)
 #                    os.remove(email)
         return commands
 
