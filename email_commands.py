@@ -38,9 +38,10 @@ class EmailCommands:
                 for line in file_data:
                     if re.search("^COMMAND", line):
                         COMLINE = line.strip() + file_data[fkey + 1].strip()
+#                        print(COMLINE)
                         commands.append(COMLINE)
-                    os.remove(email)
                     fkey = fkey + 1;
+                os.remove(email)
         return commands
 
     def process_commands(self, dictionary, default_threshold, default_date_format, dictionary_file):
