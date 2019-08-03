@@ -34,10 +34,14 @@ class EmailCommands:
         for email in list_of_command_emails:
             with open(email) as f:
                 file_data = f.readlines()
+                fkey = 0;
                 for line in file_data:
                     if re.search("^COMMAND", line):
-                        commands.append(line)
-                    os.remove(email)
+                        COMLINE = line.strip() + file_data[fkey + 1].strip()
+#                        print(COMLINE)
+                        commands.append(COMLINE)
+                    fkey = fkey + 1;
+                os.remove(email)
         return commands
 
     def process_commands(self, dictionary, default_threshold, default_date_format, dictionary_file):
@@ -60,6 +64,7 @@ class EmailCommands:
         default_time = threshold_time.strftime(default_date_format)
         key = company + server + client
         if command.upper() == 'REMOVE':
+#            print(key)
             if key in dictionary.keys():
                 del dictionary[key]
         elif command.upper() == 'ADD':
